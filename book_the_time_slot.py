@@ -86,6 +86,8 @@ def button(update: Update, context: CallbackContext) -> None:
         dates = generate_dates()
         keyboard = [[InlineKeyboardButton(
             date, callback_data=f'date_{date.split(" ")[0]}')] for date in dates]
+        keyboard.append([InlineKeyboardButton(
+            "Назад", callback_data='5')])
         reply_markup = InlineKeyboardMarkup(keyboard)
         context.bot.send_message(
             chat_id=query.message.chat_id, text="Выбери дату:", reply_markup=reply_markup)
@@ -104,7 +106,6 @@ def button(update: Update, context: CallbackContext) -> None:
     elif query.data == '5':
         start(update, context)  # Call the /start command
     elif query.data == '6':
-        # Show the author text in a new message
         context.bot.send_message(
             chat_id=query.message.chat_id, text="Автор: @rdavidoff")
 
