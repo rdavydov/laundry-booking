@@ -142,13 +142,15 @@ def display_not_booked_times(update: Update, context: CallbackContext, selected_
     current_time = datetime.strptime(
         selected_date + " 00:00", "%d.%m.%Y %H:%M")
 
+    # current_time = datetime.now().replace(microsecond=0).replace(tzinfo=None)
+
     # Loop through the booked time slots
     for booking in bookings:
         start_time, end_time, start_booking_date, end_booking_date = booking
         start_time_dt = datetime.strptime(
-            f"{start_booking_date} {start_time}", "%d.%m.%Y %H:%M")  # - timedelta(minutes=30)
+            f"{start_booking_date} {start_time}", "%d.%m.%Y %H:%M") - timedelta(minutes=30)
         end_time_dt = datetime.strptime(
-            f"{end_booking_date} {end_time}", "%d.%m.%Y %H:%M")  # + timedelta(minutes=30)
+            f"{end_booking_date} {end_time}", "%d.%m.%Y %H:%M") + timedelta(minutes=30)
 
         # Check if there is a free slot before this booking
         if (start_time_dt - current_time).total_seconds() > 0:
