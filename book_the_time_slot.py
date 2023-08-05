@@ -18,7 +18,11 @@ from apscheduler.triggers.date import DateTrigger
 from dateutil.parser import parse as parse_time
 from dotenv import load_dotenv
 
-local_tz = pytz.timezone('Europe/Moscow')
+load_dotenv()  # Load the environment variables from .env file
+token = os.getenv("TELEGRAM_LAUNDRY_BOT_TOKEN")
+tz = os.getenv("TIMEZONE")
+
+local_tz = pytz.timezone(tz)
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -26,9 +30,6 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 # Create a SQLite database connection
 conn = sqlite3.connect('bookings.db')
-
-load_dotenv()  # Load the environment variables from .env file
-token = os.getenv("TELEGRAM_LAUNDRY_BOT_TOKEN")
 
 # Create a cursor object
 c = conn.cursor()
@@ -73,7 +74,7 @@ def generate_dates():
     except locale.Error:
         print("The desired locale is not supported on your system.")
 
-    dates = [datetime.now() + timedelta(days=i) for i in range(7)]
+    dates = [datetime.now(local_tz) + timedelta(days=i) for i in range(7)]
     return [date.strftime('%d.%m.%Y (%A)') for date in dates]
 
 
