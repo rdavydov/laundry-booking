@@ -54,10 +54,10 @@ pip install python-dateutil
 pip install psycopg2
 ```
 
-4. Add your Telegram Bot Token that you've recived from the BotFather to the .env file in the same directory as your Python files:
+4. Add your Telegram Bot Token that you've recieved from the BotFather to the .env file in the same directory as your Python files:
 
 ```
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+TELEGRAM_LAUNDRY_BOT_TOKEN=your_telegram_bot_token_here
 ```
 
 5. Start the bot and the additional services:

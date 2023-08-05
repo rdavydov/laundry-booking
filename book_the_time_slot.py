@@ -10,11 +10,13 @@ import pytz
 import locale
 import requests
 import json
+import os
 from concurrent.futures import ThreadPoolExecutor
 from math import floor, ceil
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.date import DateTrigger
 from dateutil.parser import parse as parse_time
+from dotenv import load_dotenv
 
 local_tz = pytz.timezone('Europe/Moscow')
 
@@ -459,8 +461,9 @@ def display_all_bookings(update: Update, context: CallbackContext) -> None:
 
 
 def main() -> None:
-    updater = Updater(
-        '6068997270:AAF5kfctIwGasJTLM0c-0RFDNmUSABaZktQ', use_context=True)
+    load_dotenv()  # Load the environment variables from .env file
+    token = os.getenv("TELEGRAM_LAUNDRY_BOT_TOKEN")
+    updater = Updater(token, use_context=True)
 
     dispatcher = updater.dispatcher
 

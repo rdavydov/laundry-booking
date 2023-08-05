@@ -3,12 +3,17 @@ import pytz
 import sqlite3
 import datetime
 import logging
+import os
+
+from dotenv import load_dotenv
 from telegram import Bot
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-bot = Bot(token='KEY')
+load_dotenv()  # Load the environment variables from .env file
+token = os.getenv("TELEGRAM_LAUNDRY_BOT_TOKEN")
+bot = Bot(token=token)
 
 # Function to send start reminders
 
