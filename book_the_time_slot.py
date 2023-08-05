@@ -93,9 +93,8 @@ def button(update: Update, context: CallbackContext) -> None:
         selected_date = query.data[5:]
         context.user_data['selected_date'] = selected_date
         display_not_booked_times(update, context, selected_date)
-        context.bot.send_message(
-            chat_id=query.message.chat_id,
-            text="Чтобы выйти в главное меню нажми /start\nОтправь мне время, которое хочешь забронировать в формате: '12:30-13:00'")
+        context.bot.send_message(chat_id=query.message.chat_id,
+                                 text="Чтобы выйти в главное меню нажми /start\nОтправь мне время, которое хочешь забронировать в формате: '12:30-13:00'")
     elif query.data == '2':
         cancel_time(update, context)
     elif query.data == '3':
@@ -360,12 +359,11 @@ def view_bookings(update: Update, context: CallbackContext) -> None:
         for booking in bookings:
             id, _, start_booking_date, end_booking_date, start_time, end_time = booking
             message_text += f"С {start_booking_date} {start_time} до {end_booking_date} {end_time}\n"
-        update.callback_context.bot.send_message(
-            chat_id=query.message.chat_id, message_text)
+        context.bot.send_message(
+            chat_id=update.effective_chat.id, text=message_text)
     else:
-        update.callback_context.bot.send_message(
-            chat_id=query.message.chat_id,
-            "У тебя нет предстоящих стирок")
+        context.bot.send_message(
+            chat_id=update.effective_chat.id, text="У тебя нет предстоящих стирок")
     start(update, context)
 
 
@@ -399,13 +397,11 @@ def cancel_time(update: Update, context: CallbackContext) -> None:
                             callback_data=f'cancel_{id}_{start_booking_date}_{end_booking_date}_{start_time}_{end_time}')])
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        update.callback_context.bot.send_message(
-            chat_id=query.message.chat_id,
-            'Чтобы выйти в главное меню нажми /start\nВыбери время, которое хочешь отменить:', reply_markup=reply_markup)
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text='Чтобы выйти в главное меню нажми /start\nВыбери время, которое хочешь отменить:', reply_markup=reply_markup)
     else:
-        update.callback_context.bot.send_message(
-            chat_id=query.message.chat_id,
-            "Чтобы выйти в главное меню нажми /start\nУ тебя нет забронированных стирок")
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Чтобы выйти в главное меню нажми /start\nУ тебя нет забронированных стирок")
 
 
 def delete_booking(update: Update, context: CallbackContext) -> None:
@@ -424,9 +420,8 @@ def delete_booking(update: Update, context: CallbackContext) -> None:
 
         conn.close()
 
-        update.callback_context.bot.send_message(
-            chat_id=query.message.chat_id,
-            f"Стирка с {start_booking_date} {end_booking_date} до {start_time} {end_time} была отменена")
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text=f"Стирка с {start_booking_date} {end_booking_date} до {start_time} {end_time} была отменена")
         start(update, context)
 
 
