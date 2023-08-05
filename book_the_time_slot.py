@@ -50,7 +50,9 @@ def start(update: Update, context: CallbackContext) -> None:
         [InlineKeyboardButton("Забронировать", callback_data='1'),
          InlineKeyboardButton("Отменить", callback_data='2')],
         [InlineKeyboardButton("Посмотреть свои стирки", callback_data='3'),
-         InlineKeyboardButton("Просмотреть все стирки", callback_data='4')]
+         InlineKeyboardButton("Просмотреть все стирки", callback_data='4')],
+        [InlineKeyboardButton("Главное меню", callback_data='5'),
+         InlineKeyboardButton("Автор", callback_data='6')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     # Check if update.message is None
@@ -98,6 +100,10 @@ def button(update: Update, context: CallbackContext) -> None:
         view_bookings(update, context)
     elif query.data == '4':
         display_all_bookings(update, context)
+    elif query.data == '5':
+        start(update, context)  # Call the /start command
+    elif query.data == '6':
+        query.edit_message_text(text="Автор: @rdavidoff")
 
 
 def display_not_booked_times(update: Update, context: CallbackContext, selected_date: str) -> None:
