@@ -87,7 +87,8 @@ def button(update: Update, context: CallbackContext) -> None:
         keyboard = [[InlineKeyboardButton(
             date, callback_data=f'date_{date.split(" ")[0]}')] for date in dates]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        query.edit_message_text(text="Выбери дату:", reply_markup=reply_markup)
+        context.bot.send_message(
+            chat_id=query.message.chat_id, text="Выбери дату:", reply_markup=reply_markup)
     elif query.data.startswith('date_'):
         selected_date = query.data[5:]
         context.user_data['selected_date'] = selected_date
