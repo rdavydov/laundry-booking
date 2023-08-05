@@ -107,7 +107,7 @@ def button(update: Update, context: CallbackContext) -> None:
         start(update, context)  # Call the /start command
     elif query.data == '6':
         context.bot.send_message(
-            chat_id=query.message.chat_id, text="Автор: @rdavidoff")
+            chat_id=query.message.chat_id, text="Автор: @rdavidoff\nhttps://github.com/rdavydov/laundry-booking")
 
 
 def display_not_booked_times(update: Update, context: CallbackContext, selected_date: str) -> None:
@@ -138,11 +138,12 @@ def display_not_booked_times(update: Update, context: CallbackContext, selected_
     # List to keep track of free time slots
     free_time_slots = []
 
-    # Start of the day
-    current_time = datetime.strptime(
+    # Beginning of the day
+    day_beginning = datetime.strptime(
         selected_date + " 00:00", "%d.%m.%Y %H:%M")
 
-    # current_time = datetime.now().replace(microsecond=0).replace(tzinfo=None)
+    now_time = datetime.now(local_tz).replace(
+        microsecond=0).replace(tzinfo=None)
 
     # Loop through the booked time slots
     for booking in bookings:
@@ -153,19 +154,19 @@ def display_not_booked_times(update: Update, context: CallbackContext, selected_
             f"{end_booking_date} {end_time}", "%d.%m.%Y %H:%M") + timedelta(minutes=30)
 
         # Check if there is a free slot before this booking
-        if (start_time_dt - current_time).total_seconds() > 0:
-            free_time_slots.append((current_time.strftime(
+        if (start_time_dt - day_beginning).total_seconds() > 0 and day_beginning > now_time:
+            free_time_slots.append((day_beginning.strftime(
                 "%d.%m.%Y %H:%M"), (start_time_dt - timedelta(minutes=1)).strftime("%d.%m.%Y %H:%M")))
 
-        # Update the current_time to the end of this booking
+        # Update the day_beginning to the end of this booking
         # 1-minute cooldown period
-        current_time = end_time_dt + timedelta(minutes=1)
+        day_beginning = end_time_dt + timedelta(minutes=1)
 
     # Check for free time slot between the last booking and 04:00 of the next day
     end_of_extended_day = datetime.strptime(
         next_date + " 04:00", "%d.%m.%Y %H:%M")
-    if (end_of_extended_day - current_time).total_seconds() > 0:
-        free_time_slots.append((current_time.strftime(
+    if (end_of_extended_day - day_beginning).total_seconds() > 0:
+        free_time_slots.append((day_beginning.strftime(
             "%d.%m.%Y %H:%M"), end_of_extended_day.strftime("%d.%m.%Y %H:%M")))
 
     # Construct and send the message
@@ -342,8 +343,8 @@ def view_bookings(update: Update, context: CallbackContext) -> None:
     c = conn.cursor()
 
     # Get the current date and time
-    current_date = datetime.now().strftime('%d.%m.%Y')
-    current_time = datetime.now().strftime('%H:%M')
+    current_date = datetime.now(local_tz).strftime('%d.%m.%Y')
+    current_time = datetime.now(local_tz).strftime('%H:%M')
 
     # Retrieving the user's bookings
     c.execute("""
