@@ -1,4 +1,5 @@
 # Booking Bot for Coliving Spaces 🏘️
+
 <div align="left">
     <img src="assets/screencast.gif" alt="Booking bot demo">
 </div>
@@ -6,10 +7,12 @@
 ---
 
 ## 📖 Overview
-Booking Bot is a Telegram bot built to streamline and automate the process of booking a washing machine in a coliving space. 
+
+Booking Bot is a Telegram bot built to streamline and automate the process of booking a washing machine in a coliving space.
 It is built using the [python-telegram-bot v13.4.1](https://github.com/python-telegram-bot/python-telegram-bot/releases/tag/v13.4.1) library and uses SQLite3 as its database to store booking information.
 
 ## ✨ Features
+
 - Book a time slot for using the washing machine.
 - Cancel a previously booked time slot.
 - View all booked time slots.
@@ -18,21 +21,29 @@ It is built using the [python-telegram-bot v13.4.1](https://github.com/python-te
 - Ability to view the bookings that other people have made.
 
 ## 🛠️ Installation
-### Prerequisites:
+
+### Prerequisites
+
 - Python 3.6 or higher
 - SQLite3
 - python-telegram-bot v13.4.1
 
-### Steps:
+### Steps
+
 1. Clone the repository:
+
 ```
 git clone https://github.com/finchren/booking_bot.git
 ```
+
 2. Navigate to the repository:
+
 ```
 cd Booking_bot/src
 ```
+
 3. Install the dependencies:
+
 ```
 TODO: Make requirements.txt with this list:
 pip install python-telegram-bot==13.4.1
@@ -40,23 +51,30 @@ pip install requests
 pip install python-dateutil
 pip install psycopg2
 ```
+
 4. Add your Telegram Bot Token that you've recived from the BotFather to the following lines of the _book_the_time_slot.py_ and _remivder_service.py_:
+
 ```
 def main() -> None:
     updater = Updater('KEY', use_context=True)
 ```
+
 ```
 bot = Bot(token='KEY')
 ```
+
 5. Start the bot and the additional services:
+
 ```
 python3 book_the_time_slot.py
 python3 remivder_service.py
 python3 clear_db.py
 ```
+
 6. Open Telegram, search for your bot's username and start a conversation.
 Follow the instructions provided by the bot to book, cancel or view bookings.
 
 ## 🤝 Contact
+
 If you have any questions or feedback, feel free to reach out
-https://t.me/finchren
+<https://t.me/finchren>

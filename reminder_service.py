@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 bot = Bot(token='KEY')
 
 # Function to send start reminders
+
+
 def send_start_reminders():
     conn = sqlite3.connect('bookings.db')
     c = conn.cursor()
@@ -20,31 +22,38 @@ def send_start_reminders():
     time_in_15_min = now + datetime.timedelta(minutes=15)
 
     # Retrieve bookings that are due to start in 15 minutes on the same day
-    c.execute("SELECT * FROM bookings WHERE start_booking_date = ? AND start_time = ?", (now.strftime('%d.%m.%Y'), time_in_15_min.strftime('%H:%M')))
+    c.execute("SELECT * FROM bookings WHERE start_booking_date = ? AND start_time = ?",
+              (now.strftime('%d.%m.%Y'), time_in_15_min.strftime('%H:%M')))
     bookings = c.fetchall()
 
     # Send a reminder for each booking
     for booking in bookings:
         id, user_id, _, _, start_time, end_time = booking
-        bot.send_message(chat_id=user_id, text=f"Напоминание: Твоя стирка начнется в {start_time}")
+        bot.send_message(
+            chat_id=user_id, text=f"Напоминание: Твоя стирка начнется в {start_time}")
 
     conn.close()
 
 # Function to send end reminders
+
+
 def send_end_reminders():
     conn = sqlite3.connect('bookings.db')
     c = conn.cursor()
 
     now = datetime.datetime.now()
 
-    c.execute("SELECT * FROM bookings WHERE end_booking_date = ? AND end_time = ?", (now.strftime('%d.%m.%Y'), now.strftime('%H:%M')))
+    c.execute("SELECT * FROM bookings WHERE end_booking_date = ? AND end_time = ?",
+              (now.strftime('%d.%m.%Y'), now.strftime('%H:%M')))
     bookings = c.fetchall()
-    
+
     for booking in bookings:
         id, user_id, _, _, start_time, end_time = booking
-        bot.send_message(chat_id=user_id, text=f"Твоя стирка закончилась в {end_time}")
+        bot.send_message(
+            chat_id=user_id, text=f"Твоя стирка закончилась в {end_time}")
 
     conn.close()
+
 
 # Initialize the scheduler
 scheduler = BlockingScheduler(timezone=pytz.utc)
