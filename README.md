@@ -34,13 +34,13 @@ It is built using the [python-telegram-bot v13.4.1](https://github.com/python-te
 1. Clone the repository:
 
 ```
-git clone https://github.com/finchren/booking_bot.git
+git clone https://github.com/rdavydov/laundry-booking.git
 ```
 
 2. Navigate to the repository:
 
 ```
-cd Booking_bot/src
+cd laundry-booking
 ```
 
 3. Install the dependencies:
