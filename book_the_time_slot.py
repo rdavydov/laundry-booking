@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 # Create a SQLite database connection
 conn = sqlite3.connect('bookings.db')
 
+load_dotenv()  # Load the environment variables from .env file
+token = os.getenv("TELEGRAM_LAUNDRY_BOT_TOKEN")
+
 # Create a cursor object
 c = conn.cursor()
 
@@ -420,7 +423,7 @@ def send_reminder(user_id: int, start_booking_date: str, end_booking_date: str, 
 def get_username(user_id):
     try:
         response = requests.get(
-            f"https://api.telegram.org/bot6068997270:AAF5kfctIwGasJTLM0c-0RFDNmUSABaZktQ/getChat?chat_id={user_id}")
+            f"https://api.telegram.org/bot{token}/getChat?chat_id={user_id}")
         data = json.loads(response.text)
         username = data["result"]["username"]
         return username
@@ -469,8 +472,6 @@ def display_all_bookings(update: Update, context: CallbackContext) -> None:
 
 
 def main() -> None:
-    load_dotenv()  # Load the environment variables from .env file
-    token = os.getenv("TELEGRAM_LAUNDRY_BOT_TOKEN")
     updater = Updater(token, use_context=True)
 
     dispatcher = updater.dispatcher
