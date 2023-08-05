@@ -397,6 +397,8 @@ def cancel_time(update: Update, context: CallbackContext) -> None:
             keyboard.append([InlineKeyboardButton(f"С {start_booking_date} {start_time} до {end_booking_date} {end_time}",
                             callback_data=f'cancel_{id}_{start_booking_date}_{end_booking_date}_{start_time}_{end_time}')])
 
+        keyboard.append([InlineKeyboardButton(
+            "Назад", callback_data='5')])
         reply_markup = InlineKeyboardMarkup(keyboard)
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='Чтобы выйти в главное меню нажми /start\nВыбери время, которое хочешь отменить:', reply_markup=reply_markup)
