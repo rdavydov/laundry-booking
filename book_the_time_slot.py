@@ -376,10 +376,8 @@ def cancel_time(update: Update, context: CallbackContext) -> None:
     conn = sqlite3.connect('bookings.db')
     c = conn.cursor()
 
-    now = datetime.now()
-
     # Convert the datetime to the format used in the database
-    current_datetime = now.strftime('%d.%m.%Y %H:%M')
+    current_datetime = datetime.now(local_tz).strftime('%d.%m.%Y %H:%M')
 
     # Retrieve the user's bookings that are later than the current time
     c.execute("""
