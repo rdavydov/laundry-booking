@@ -418,10 +418,18 @@ def send_reminder(user_id: int, start_booking_date: str, end_booking_date: str, 
 
 
 def get_username(user_id):
-    response = requests.get(
-        f"https://api.telegram.org/bot6068997270:AAF5kfctIwGasJTLM0c-0RFDNmUSABaZktQ/getChat?chat_id={user_id}")
-    data = json.loads(response.text)
-    return data["result"]["username"]
+    try:
+        response = requests.get(
+            f"https://api.telegram.org/bot6068997270:AAF5kfctIwGasJTLM0c-0RFDNmUSABaZktQ/getChat?chat_id={user_id}")
+        data = json.loads(response.text)
+        username = data["result"]["username"]
+        return username
+    except KeyError as e:
+        logging.error(f"KeyError: {e}. Response data: {data}")
+        return "N/A"
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return "N/A"
 
 
 def get_usernames(user_ids):
