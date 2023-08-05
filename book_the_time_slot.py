@@ -215,12 +215,11 @@ def book_time(update: Update, context: CallbackContext) -> None:
                     f"{booking_date} {start_time}", "%d.%m.%Y %H:%M")
 
                 # Convert combined_start_datetime to timezone aware
-                moscow_tz = pytz.timezone('Europe/Moscow')
-                combined_start_datetime = moscow_tz.localize(
+                combined_start_datetime = local_tz.localize(
                     combined_start_datetime_naive)
 
                 # Get current datetime with timezone
-                current_datetime = datetime.now(moscow_tz)
+                current_datetime = datetime.now(local_tz)
 
                 if combined_start_datetime < current_datetime:
                     update.message.reply_text(
