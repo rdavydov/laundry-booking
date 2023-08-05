@@ -108,6 +108,7 @@ def button(update: Update, context: CallbackContext) -> None:
     elif query.data == '6':
         context.bot.send_message(
             chat_id=query.message.chat_id, text="Автор: @rdavidoff\nhttps://github.com/rdavydov/laundry-booking")
+        start(update, context)
 
 
 def display_not_booked_times(update: Update, context: CallbackContext, selected_date: str) -> None:
@@ -367,6 +368,7 @@ def view_bookings(update: Update, context: CallbackContext) -> None:
     else:
         context.bot.send_message(
             chat_id=update.effective_chat.id, text="У тебя нет предстоящих стирок")
+
     start(update, context)
 
 
@@ -401,10 +403,11 @@ def cancel_time(update: Update, context: CallbackContext) -> None:
             "Назад", callback_data='5')])
         reply_markup = InlineKeyboardMarkup(keyboard)
         context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='Чтобы выйти в главное меню нажми /start\nВыбери время, которое хочешь отменить:', reply_markup=reply_markup)
+                                 text='Выбери время, которое хочешь отменить:', reply_markup=reply_markup)
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text="Чтобы выйти в главное меню нажми /start\nУ тебя нет забронированных стирок")
+        context.bot.send_message(
+            chat_id=update.effective_chat.id, text="У тебя нет забронированных стирок")
+        start(update, context)
 
 
 def delete_booking(update: Update, context: CallbackContext) -> None:
@@ -420,11 +423,11 @@ def delete_booking(update: Update, context: CallbackContext) -> None:
         c.execute("DELETE FROM bookings WHERE id = ?", (id,))
 
         conn.commit()
-
         conn.close()
 
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text=f"Стирка с {start_booking_date} {end_booking_date} до {start_time} {end_time} была отменена")
+
         start(update, context)
 
 
@@ -482,6 +485,8 @@ def display_all_bookings(update: Update, context: CallbackContext) -> None:
     else:
         update.callback_query.message.reply_text(
             'No bookings in the last 3 days.')
+
+    start(update, context)
 
 
 def main() -> None:
