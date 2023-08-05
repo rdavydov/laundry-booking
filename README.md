@@ -27,6 +27,7 @@ It is built using the [python-telegram-bot v13.4.1](https://github.com/python-te
 - Python 3.6 or higher
 - SQLite3
 - python-telegram-bot v13.4.1
+- python-dotenv
 
 ### Steps
 
@@ -48,33 +49,24 @@ cd Booking_bot/src
 TODO: Make requirements.txt with this list:
 pip install python-telegram-bot==13.4.1
 pip install requests
+pip install python-dotenv
 pip install python-dateutil
 pip install psycopg2
 ```
 
-4. Add your Telegram Bot Token that you've recived from the BotFather to the following lines of the _book_the_time_slot.py_ and _remivder_service.py_:
+4. Add your Telegram Bot Token that you've recived from the BotFather to the .env file in the same directory as your Python files:
 
 ```
-def main() -> None:
-    updater = Updater('KEY', use_context=True)
-```
-
-```
-bot = Bot(token='KEY')
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 ```
 
 5. Start the bot and the additional services:
 
 ```
 python3 book_the_time_slot.py
-python3 remivder_service.py
+python3 reminder_service.py
 python3 clear_db.py
 ```
 
 6. Open Telegram, search for your bot's username and start a conversation.
 Follow the instructions provided by the bot to book, cancel or view bookings.
-
-## 🤝 Contact
-
-If you have any questions or feedback, feel free to reach out
-<https://t.me/finchren>
