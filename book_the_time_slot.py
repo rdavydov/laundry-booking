@@ -103,7 +103,9 @@ def button(update: Update, context: CallbackContext) -> None:
     elif query.data == '5':
         start(update, context)  # Call the /start command
     elif query.data == '6':
-        query.edit_message_text(text="Автор: @rdavidoff")
+        # Show the author text in a new message
+        context.bot.send_message(
+            chat_id=query.message.chat_id, text="Автор: @rdavidoff")
 
 
 def display_not_booked_times(update: Update, context: CallbackContext, selected_date: str) -> None:
