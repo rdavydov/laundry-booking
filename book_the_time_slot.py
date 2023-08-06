@@ -327,7 +327,7 @@ def process_booking(update: Update, context: CallbackContext, start_time: str, e
             conn.commit()
 
             reply_func(
-                f"Успешно забронировал стирку с {booking_start_date} {start_time} до {booking_end_date} {end_time}")
+                f"Успешно забронирована стирка с {booking_start_date} {start_time} до {booking_end_date} {end_time}")
         else:
             reply_func(
                 "Время за 30 минут до начала или 30 минут после уже занято. Выбери другое время")
@@ -434,7 +434,7 @@ def delete_booking(update: Update, context: CallbackContext) -> None:
 
 def send_reminder(user_id: int, start_booking_date: str, end_booking_date: str, start_time: str, end_time: str) -> None:
     context.bot.send_message(
-        chat_id=user_id, text=f"Ранее ты забронировал стирку с {start_booking_date} {end_booking_date} до {start_time} {end_time}. Это твое 15-минутное напоминание.")
+        chat_id=user_id, text=f"Ранее ты забронировал(а) стирку с {start_booking_date} {end_booking_date} до {start_time} {end_time}. Это твое 15-минутное напоминание.")
 
 
 def get_username(user_id):
