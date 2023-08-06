@@ -427,7 +427,7 @@ def delete_booking(update: Update, context: CallbackContext) -> None:
         conn.close()
 
         context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text=f"Стирка с {start_booking_date} {end_booking_date} до {start_time} {end_time} была отменена")
+                                 text=f"Стирка с {start_booking_date} {start_time} до {end_booking_date} {end_time} была отменена")
 
         start(update, context)
 
