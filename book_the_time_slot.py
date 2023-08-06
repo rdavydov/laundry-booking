@@ -442,8 +442,15 @@ def get_username(user_id):
         response = requests.get(
             f"https://api.telegram.org/bot{token}/getChat?chat_id={user_id}")
         data = json.loads(response.text)
-        username = data["result"]["username"]
-        return username
+        if "username" in data["result"] and data["result"]["username"]:
+            return "@" + data["result"]["username"]
+        elif "first_name" in data["result"] and data["result"]["first_name"]:
+            if "last_name" in data["result"] and data["result"]["last_name"]:
+                return f"{data['result']['first_name']} {data['result']['last_name']}"
+            else:
+                return data["result"]["first_name"]
+        else:
+            return "N/A"
     except KeyError as e:
         logging.error(f"KeyError: {e}. Response data: {data}")
         return "N/A"
@@ -475,7 +482,7 @@ def display_all_bookings(update: Update, context: CallbackContext) -> None:
     formatted_bookings = []
     for booking, username in zip(all_bookings, usernames):
         user_id, start_date, end_date, start_time, end_time = booking[1:]
-        formatted_booking = f"@{username} - с {start_date} {start_time} до {end_date} {end_time}"
+        formatted_booking = f"{username} ID{user_id[-2:]} - с {start_date} {start_time} до {end_date} {end_time}"
         formatted_bookings.append(formatted_booking)
 
     c.close()
