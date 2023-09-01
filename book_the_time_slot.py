@@ -302,6 +302,10 @@ def process_booking(update: Update, context: CallbackContext, start_time: str, e
     conn = sqlite3.connect('bookings.db')
     c = conn.cursor()
 
+    # Ensure that hours and minutes have two digits
+    start_time = start_time.zfill(5)
+    end_time = end_time.zfill(5)
+
     # Convert the times to datetime objects
     start_time_datetime = parse_time(start_time)
     end_time_datetime = parse_time(end_time)
