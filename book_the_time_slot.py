@@ -210,6 +210,10 @@ def book_time(update: Update, context: CallbackContext) -> None:
                 start_time, end_time = [
                     time.strip() for time in message_text.replace('\u2013', '-').split('-')]
 
+                # Ensure that hours and minutes have two digits
+                start_time = start_time.zfill(5)
+                end_time = end_time.zfill(5)
+
                 # Convert start_time and end_time to datetime objects for comparison
                 start_time_dt = datetime.strptime(start_time, "%H:%M")
                 end_time_dt = datetime.strptime(end_time, "%H:%M")
