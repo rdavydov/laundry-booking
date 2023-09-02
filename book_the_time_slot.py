@@ -36,7 +36,14 @@ c = conn.cursor()
 
 # Create table
 c.execute('''CREATE TABLE IF NOT EXISTS bookings
-             (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id text, start_booking_date text, end_booking_date text, start_time text, end_time text)''')
+             (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+              user_id text, 
+              building_number text,
+              floor_number text,
+              start_booking_date text, 
+              end_booking_date text, 
+              start_time text, 
+              end_time text)''')
 
 # Commit the changes to the DB
 conn.commit()
@@ -52,7 +59,7 @@ def start(update: Update, context: CallbackContext) -> None:
         [InlineKeyboardButton("Отменить", callback_data='2')],
         [InlineKeyboardButton("Посмотреть свои стирки", callback_data='3')],
         [InlineKeyboardButton("Посмотреть все стирки", callback_data='4')],
-        [InlineKeyboardButton("Настройки", callback_data='5')],
+        [InlineKeyboardButton("Главное меню", callback_data='5')],
         [InlineKeyboardButton("Автор", callback_data='6')]
     ]
 
@@ -145,23 +152,16 @@ def button(update: Update, context: CallbackContext) -> None:
             chat_id=query.message.chat_id, text="Автор: @rdavidoff\nhttps://github.com/rdavydov/laundry-booking")
         start(update, context)
     elif query.data == '7':
-        # Building and floor selection option
-        keyboard = [
-            [InlineKeyboardButton("Корпус 1, Этаж 1", callback_data='building_1_floor_1')],
-            [InlineKeyboardButton("Корпус 1, Этаж 2", callback_data='building_1_floor_2')],
-            [InlineKeyboardButton("Корпус 1, Этаж 3", callback_data='building_1_floor_3')],
-            [InlineKeyboardButton("Корпус 1, Этаж 4", callback_data='building_1_floor_4')],
-            [InlineKeyboardButton("Корпус 1, Этаж 5", callback_data='building_1_floor_5')],
-            [InlineKeyboardButton("Корпус 2, Этаж 1", callback_data='building_2_floor_1')],
-            [InlineKeyboardButton("Корпус 2, Этаж 2", callback_data='building_2_floor_2')],
-            [InlineKeyboardButton("Корпус 2, Этаж 3", callback_data='building_2_floor_3')],
-            [InlineKeyboardButton("Корпус 2, Этаж 4", callback_data='building_2_floor_4')],
-            [InlineKeyboardButton("Корпус 2, Этаж 5", callback_data='building_2_floor_5')],
-            [InlineKeyboardButton("Назад", callback_data='5')]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        context.bot.send_message(
-            chat_id=query.message.chat_id, text="Выбери корпус и этаж:", reply_markup=reply_markup)
+            # Proceed to building and floor selection
+            buildings = ["1", "2"]
+            floors = ["1", "2", "3", "4", "5"]
+            keyboard = [[InlineKeyboardButton(
+                f"Корпус {building}, Этаж {floor}", callback_data=f'building_{building}_floor_{floor}')] for building in buildings for floor in floors]
+            keyboard.append([InlineKeyboardButton(
+                "Назад", callback_data='5')])
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            context.bot.send_message(
+                chat_id=query.message.chat_id, text="Выбери корпус и этаж:", reply_markup=reply_markup)
 
 
 def display_not_booked_times(update: Update, context: CallbackContext, selected_date: str) -> None:
@@ -353,12 +353,8 @@ def process_booking(update: Update, context: CallbackContext, start_time: str, e
     user_id = update.message.from_user.id if update.message else update.callback_query.from_user.id
 
     # Store building and floor in user_data
-    if 'building' in context.user_data and 'floor' in context.user_data:
-        building = context.user_data['building']
-        floor = context.user_data['floor']
-    else:
-        building = "N/A"
-        floor = "N/A"
+    building = context.user_data.get('building', 'N/A')
+    floor = context.user_data.get('floor', 'N/A')
 
     # To handle callback_query as well as message
     reply_func = update.message.reply_text if update.message else update.callback_query.message.reply_text
@@ -390,12 +386,13 @@ def process_booking(update: Update, context: CallbackContext, start_time: str, e
                 booking_end_date = (datetime.strptime(
                     booking_start_date, "%d.%m.%Y") + timedelta(days=1)).strftime('%d.%m.%Y')
 
-            c.execute("INSERT INTO bookings VALUES (NULL, ?, ?, ?, ?, ?)",
-                      (user_id, booking_start_date, booking_end_date, start_time, end_time))
+            c.execute("INSERT INTO bookings VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)",
+                        (user_id, building, floor, booking_start_date, booking_end_date, start_time, end_time))
             conn.commit()
 
             reply_func(
-                f"Успешно забронирована стирка с {booking_start_date} {start_time} до {booking_end_date} {end_time}")
+                f"Успешно забронирована стирка с {booking_start_date} {start_time} до {booking_end_date} {end_time}\n"
+                f"Корпус: {building}, Этаж: {floor}")
         else:
             reply_func(
                 "Время за 30 минут до начала или 30 минут после уже занято. Выбери другое время")
@@ -430,8 +427,9 @@ def view_bookings(update: Update, context: CallbackContext) -> None:
     if bookings:
         message_text = "Твои стирки:\n"
         for booking in bookings:
-            id, _, start_booking_date, end_booking_date, start_time, end_time = booking
-            message_text += f"С {start_booking_date} {start_time} до {end_booking_date} {end_time}\n"
+            id, user_id, building, floor, start_booking_date, end_booking_date, start_time, end_time = booking
+            message_text += f"С {start_booking_date} {start_time} до {end_booking_date} {end_time}"
+            message_text += f" (к{building}э{floor})\n"
         context.bot.send_message(
             chat_id=update.effective_chat.id, text=message_text)
     else:
@@ -549,8 +547,9 @@ def display_all_bookings(update: Update, context: CallbackContext) -> None:
 
     formatted_bookings = []
     for booking, username in zip(all_bookings, usernames):
-        user_id, start_date, end_date, start_time, end_time = booking[1:]
+        user_id, building, floor, start_date, end_date, start_time, end_time = booking[1:]
         formatted_booking = f"{username} ID{user_id[-2:]} - с {start_date} {start_time} до {end_date} {end_time}"
+        formatted_booking += f" (к{building}э{floor})\n"
         formatted_bookings.append(formatted_booking)
 
     c.close()
