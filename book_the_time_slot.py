@@ -48,14 +48,25 @@ scheduler.start()
 
 def start(update: Update, context: CallbackContext) -> None:
     keyboard = [
-        [InlineKeyboardButton("Забронировать", callback_data='1'),
-         InlineKeyboardButton("Отменить", callback_data='2')],
-        [InlineKeyboardButton("Посмотреть свои стирки", callback_data='3'),
-         InlineKeyboardButton("Посмотреть все стирки", callback_data='4')],
-        [InlineKeyboardButton("Главное меню", callback_data='5'),
-         InlineKeyboardButton("Автор", callback_data='6')]
+        [InlineKeyboardButton("Забронировать", callback_data='1')],
+        [InlineKeyboardButton("Отменить", callback_data='2')],
+        [InlineKeyboardButton("Посмотреть свои стирки", callback_data='3')],
+        [InlineKeyboardButton("Посмотреть все стирки", callback_data='4')],
+        [InlineKeyboardButton("Настройки", callback_data='5')],
+        [InlineKeyboardButton("Автор", callback_data='6')]
     ]
+
+    if 'building' in context.user_data:
+        building = context.user_data['building']
+        floor = context.user_data['floor']
+        keyboard.insert(0, [InlineKeyboardButton(
+            f"Корпус: {building}, Этаж: {floor}", callback_data='7')])
+    else:
+        keyboard.insert(0, [InlineKeyboardButton(
+            "Выбрать Корпус и Этаж", callback_data='7')])
+
     reply_markup = InlineKeyboardMarkup(keyboard)
+    
     # Check if update.message is None
     if update.message:
         update.message.reply_text(
@@ -84,6 +95,35 @@ def button(update: Update, context: CallbackContext) -> None:
     query.answer()
 
     if query.data == '1':
+        # Check if building and floor settings exist in user_data
+        if 'building' in context.user_data and 'floor' in context.user_data:
+            # Proceed to date selection
+            dates = generate_dates()
+            keyboard = [[InlineKeyboardButton(
+                date, callback_data=f'date_{date.split(" ")[0]}')] for date in dates]
+            keyboard.append([InlineKeyboardButton(
+                "Назад", callback_data='5')])
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            context.bot.send_message(
+                chat_id=query.message.chat_id, text="Выбери дату:", reply_markup=reply_markup)
+        else:
+            # Prompt user to select building and floor
+            context.bot.send_message(chat_id=query.message.chat_id,
+                                     text="Пожалуйста, выбери корпус и этаж сначала.")
+    elif query.data.startswith('date_'):
+        selected_date = query.data[5:]
+        context.user_data['selected_date'] = selected_date
+        display_not_booked_times(update, context, selected_date)
+        context.bot.send_message(chat_id=query.message.chat_id,
+                                 text="Чтобы выйти в главное меню нажми /start\nОтправь мне время, которое хочешь забронировать в формате: '12:30-13:00'")
+    elif query.data.startswith('building_'):
+        # Extract building and floor information
+        building, floor = query.data.split('_')[1], query.data.split('_')[3]
+        context.user_data['building'] = building
+        context.user_data['floor'] = floor
+        context.bot.send_message(chat_id=query.message.chat_id,
+                                 text=f"Корпус {building}, Этаж {floor} выбраны.")
+        # Proceed to date selection
         dates = generate_dates()
         keyboard = [[InlineKeyboardButton(
             date, callback_data=f'date_{date.split(" ")[0]}')] for date in dates]
@@ -92,12 +132,6 @@ def button(update: Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(keyboard)
         context.bot.send_message(
             chat_id=query.message.chat_id, text="Выбери дату:", reply_markup=reply_markup)
-    elif query.data.startswith('date_'):
-        selected_date = query.data[5:]
-        context.user_data['selected_date'] = selected_date
-        display_not_booked_times(update, context, selected_date)
-        context.bot.send_message(chat_id=query.message.chat_id,
-                                 text="Чтобы выйти в главное меню нажми /start\nОтправь мне время, которое хочешь забронировать в формате: '12:30-13:00'")
     elif query.data == '2':
         cancel_time(update, context)
     elif query.data == '3':
@@ -110,6 +144,24 @@ def button(update: Update, context: CallbackContext) -> None:
         context.bot.send_message(
             chat_id=query.message.chat_id, text="Автор: @rdavidoff\nhttps://github.com/rdavydov/laundry-booking")
         start(update, context)
+    elif query.data == '7':
+        # Building and floor selection option
+        keyboard = [
+            [InlineKeyboardButton("Корпус 1, Этаж 1", callback_data='building_1_floor_1')],
+            [InlineKeyboardButton("Корпус 1, Этаж 2", callback_data='building_1_floor_2')],
+            [InlineKeyboardButton("Корпус 1, Этаж 3", callback_data='building_1_floor_3')],
+            [InlineKeyboardButton("Корпус 1, Этаж 4", callback_data='building_1_floor_4')],
+            [InlineKeyboardButton("Корпус 1, Этаж 5", callback_data='building_1_floor_5')],
+            [InlineKeyboardButton("Корпус 2, Этаж 1", callback_data='building_2_floor_1')],
+            [InlineKeyboardButton("Корпус 2, Этаж 2", callback_data='building_2_floor_2')],
+            [InlineKeyboardButton("Корпус 2, Этаж 3", callback_data='building_2_floor_3')],
+            [InlineKeyboardButton("Корпус 2, Этаж 4", callback_data='building_2_floor_4')],
+            [InlineKeyboardButton("Корпус 2, Этаж 5", callback_data='building_2_floor_5')],
+            [InlineKeyboardButton("Назад", callback_data='5')]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        context.bot.send_message(
+            chat_id=query.message.chat_id, text="Выбери корпус и этаж:", reply_markup=reply_markup)
 
 
 def display_not_booked_times(update: Update, context: CallbackContext, selected_date: str) -> None:
@@ -299,6 +351,14 @@ def process_booking(update: Update, context: CallbackContext, start_time: str, e
     booking_start_date = context.user_data['selected_date']
     booking_end_date = booking_start_date
     user_id = update.message.from_user.id if update.message else update.callback_query.from_user.id
+
+    # Store building and floor in user_data
+    if 'building' in context.user_data and 'floor' in context.user_data:
+        building = context.user_data['building']
+        floor = context.user_data['floor']
+    else:
+        building = "N/A"
+        floor = "N/A"
 
     # To handle callback_query as well as message
     reply_func = update.message.reply_text if update.message else update.callback_query.message.reply_text
