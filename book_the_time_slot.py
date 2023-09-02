@@ -117,6 +117,7 @@ def button(update: Update, context: CallbackContext) -> None:
             # Prompt user to select building and floor
             context.bot.send_message(chat_id=query.message.chat_id,
                                      text="Пожалуйста, выбери корпус и этаж сначала.")
+            start(update, context)
     elif query.data.startswith('date_'):
         selected_date = query.data[5:]
         context.user_data['selected_date'] = selected_date
