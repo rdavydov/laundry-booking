@@ -1,5 +1,7 @@
 # python-telegram-bot-13.4.1 is used
 
+# TODO: CREATE TABLE IF NOT EXISTS user_info
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackQueryHandler, CallbackContext, Filters
 from datetime import datetime, timedelta
@@ -53,6 +55,28 @@ scheduler = BackgroundScheduler()
 scheduler.start()
 
 
+def get_user_building_floor(user_id: str):
+    conn = sqlite3.connect('bookings.db')
+    c = conn.cursor()
+    c.execute('SELECT building_number, floor_number FROM bookings WHERE user_id = ?', (user_id,))
+    result = c.fetchone()
+    conn.close()
+
+    if result:
+        building, floor = result
+        return building, floor
+    else:
+        return None, None
+    
+def update_booking_building_floor(user_id: str, building: str, floor: str):
+    # Update building and floor information for the given user_id in the bookings table
+    conn = sqlite3.connect('bookings.db')
+    c = conn.cursor()
+    c.execute('UPDATE bookings SET building_number=?, floor_number=? WHERE user_id=?', (building, floor, user_id))
+    conn.commit()
+    conn.close()
+
+
 def start(update: Update, context: CallbackContext) -> None:
     keyboard = [
         [InlineKeyboardButton("Забронировать", callback_data='1')],
@@ -63,9 +87,10 @@ def start(update: Update, context: CallbackContext) -> None:
         [InlineKeyboardButton("Автор", callback_data='6')]
     ]
 
-    if 'building' in context.user_data:
-        building = context.user_data['building']
-        floor = context.user_data['floor']
+    user_id = str(update.effective_user.id)
+    building, floor = get_user_building_floor(user_id)
+
+    if building and floor:
         keyboard.insert(0, [InlineKeyboardButton(
             f"Корпус: {building}, Этаж: {floor}", callback_data='7')])
     else:
@@ -81,6 +106,7 @@ def start(update: Update, context: CallbackContext) -> None:
     else:
         update.callback_query.message.reply_text(
             'Пожалуйста, выбери:', reply_markup=reply_markup)
+
 
 # Helper function to generate the next 7 days
 
@@ -101,9 +127,12 @@ def button(update: Update, context: CallbackContext) -> None:
 
     query.answer()
 
+    user_id = str(update.effective_user.id)
+    building, floor = get_user_building_floor(user_id)
+
     if query.data == '1':
-        # Check if building and floor settings exist in user_data
-        if 'building' in context.user_data and 'floor' in context.user_data:
+        # Check if building and floor settings exist
+        if building and floor:
             # Proceed to date selection
             dates = generate_dates()
             keyboard = [[InlineKeyboardButton(
@@ -121,16 +150,19 @@ def button(update: Update, context: CallbackContext) -> None:
     elif query.data.startswith('date_'):
         selected_date = query.data[5:]
         context.user_data['selected_date'] = selected_date
-        display_not_booked_times(update, context, selected_date)
+        _floor = floor
+        display_not_booked_times(update, context, selected_date, building, _floor)
         context.bot.send_message(chat_id=query.message.chat_id,
                                  text="Чтобы выйти в главное меню нажми /start\nОтправь мне время, которое хочешь забронировать в формате: '12:30-13:00'")
     elif query.data.startswith('building_'):
         # Extract building and floor information
         building, floor = query.data.split('_')[1], query.data.split('_')[3]
-        context.user_data['building'] = building
-        context.user_data['floor'] = floor
+        # Update building and floor in the database
+        update_booking_building_floor(user_id, building, floor)
         context.bot.send_message(chat_id=query.message.chat_id,
                                  text=f"Корпус {building}, Этаж {floor} выбраны.")
+        context.bot.send_message(chat_id=query.message.chat_id,
+                                 text="⚠️⚠️⚠️ ЕСЛИ У ВАС ОСТАВАЛИСЬ ЗАБРОНИРОВАНЫ СТИРКИ НА СТАРОМ МЕСТЕ, ПОЖАЛУЙСТА, СНАЧАЛА УДАЛИТЕ ИХ ВСЕ ⚠️⚠️⚠️")
         # Proceed to date selection
         dates = generate_dates()
         keyboard = [[InlineKeyboardButton(
@@ -165,7 +197,7 @@ def button(update: Update, context: CallbackContext) -> None:
                 chat_id=query.message.chat_id, text="Выбери корпус и этаж:", reply_markup=reply_markup)
 
 
-def display_not_booked_times(update: Update, context: CallbackContext, selected_date: str) -> None:
+def display_not_booked_times(update: Update, context: CallbackContext, selected_date: str, building: str, _floor: str) -> None:
     conn = sqlite3.connect('bookings.db')
     c = conn.cursor()
 
@@ -177,14 +209,14 @@ def display_not_booked_times(update: Update, context: CallbackContext, selected_
 
     # Query the database for the bookings on the selected date and next date (4 hours into next day)
     c.execute("""
-        SELECT start_time, end_time, start_booking_date, end_booking_date
-        FROM bookings
-        WHERE
-            (start_booking_date = ? AND strftime('%H:%M', end_time) > '00:00')
-            OR (start_booking_date = ? AND strftime('%H:%M', start_time) < '04:00')
-            OR (end_booking_date = ? AND strftime('%H:%M', end_time) >= '04:00')
-        ORDER BY start_booking_date, start_time
-    """, (selected_date, next_date, selected_date))
+    SELECT *
+    FROM bookings
+    WHERE
+        (start_booking_date = ? AND floor_number = ? AND building_number = ? AND strftime('%H:%M', end_time) > '00:00')
+        OR (start_booking_date = ? AND floor_number = ? AND building_number = ? AND strftime('%H:%M', start_time) < '04:00')
+        OR (end_booking_date = ? AND floor_number = ? AND building_number = ? AND strftime('%H:%M', end_time) >= '04:00')
+    ORDER BY start_booking_date, start_time
+""", (selected_date, _floor, building, next_date, _floor, building, selected_date, _floor, building))
 
     bookings = c.fetchall()
 
@@ -354,8 +386,7 @@ def process_booking(update: Update, context: CallbackContext, start_time: str, e
     user_id = update.message.from_user.id if update.message else update.callback_query.from_user.id
 
     # Store building and floor in user_data
-    building = context.user_data.get('building', 'N/A')
-    floor = context.user_data.get('floor', 'N/A')
+    building, floor = get_user_building_floor(user_id)
 
     # To handle callback_query as well as message
     reply_func = update.message.reply_text if update.message else update.callback_query.message.reply_text
@@ -387,8 +418,9 @@ def process_booking(update: Update, context: CallbackContext, start_time: str, e
                 booking_end_date = (datetime.strptime(
                     booking_start_date, "%d.%m.%Y") + timedelta(days=1)).strftime('%d.%m.%Y')
 
-            c.execute("INSERT INTO bookings VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)",
-                        (user_id, building, floor, booking_start_date, booking_end_date, start_time, end_time))
+            c.execute("INSERT INTO bookings (user_id, building_number, floor_number, start_booking_date, end_booking_date, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          (user_id, building, floor, booking_start_date, booking_end_date, start_time, end_time))
+
             conn.commit()
 
             reply_func(
@@ -463,7 +495,7 @@ def cancel_time(update: Update, context: CallbackContext) -> None:
     if bookings:
         keyboard = []
         for booking in bookings:
-            id, _, start_booking_date, end_booking_date, start_time, end_time = booking
+            id, user_id, building, floor, start_booking_date, end_booking_date, start_time, end_time = booking
             keyboard.append([InlineKeyboardButton(f"С {start_booking_date} {start_time} до {end_booking_date} {end_time}",
                             callback_data=f'cancel_{id}_{start_booking_date}_{end_booking_date}_{start_time}_{end_time}')])
 
