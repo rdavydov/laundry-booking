@@ -51,7 +51,7 @@ def start(update: Update, context: CallbackContext) -> None:
         [InlineKeyboardButton("Забронировать", callback_data='1'),
          InlineKeyboardButton("Отменить", callback_data='2')],
         [InlineKeyboardButton("Посмотреть свои стирки", callback_data='3'),
-         InlineKeyboardButton("Просмотреть все стирки", callback_data='4')],
+         InlineKeyboardButton("Посмотреть все стирки", callback_data='4')],
         [InlineKeyboardButton("Главное меню", callback_data='5'),
          InlineKeyboardButton("Автор", callback_data='6')]
     ]
@@ -277,7 +277,7 @@ def book_time(update: Update, context: CallbackContext) -> None:
                     "Пожалуйста, введи время в верном формате '12:30-13:00'")
 
         else:
-            update.message.reply_text("Сперва выбери дату стирки")
+            update.message.reply_text("Сначала выбери дату стирки")
             start(update, context)
 
 
