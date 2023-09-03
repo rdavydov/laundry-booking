@@ -238,7 +238,7 @@ def display_not_booked_times(update: Update, context: CallbackContext, selected_
 
     # Loop through the booked time slots
     for booking in bookings:
-        id, user_id, building_number, floor_number, start_time, end_time, start_booking_date, end_booking_date = booking
+        id, user_id, building_number, floor_number, start_booking_date, end_booking_date, start_time, end_time = booking
         start_time_dt = datetime.strptime(
             f"{start_booking_date} {start_time}", "%d.%m.%Y %H:%M") - timedelta(minutes=30)
         end_time_dt = datetime.strptime(
