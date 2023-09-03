@@ -36,7 +36,7 @@ conn = sqlite3.connect('bookings.db')
 # Create a cursor object
 c = conn.cursor()
 
-# Create table
+# Create tables
 c.execute('''CREATE TABLE IF NOT EXISTS bookings
              (id INTEGER PRIMARY KEY AUTOINCREMENT, 
               user_id text, 
@@ -46,6 +46,11 @@ c.execute('''CREATE TABLE IF NOT EXISTS bookings
               end_booking_date text, 
               start_time text, 
               end_time text)''')
+
+c.execute('''CREATE TABLE IF NOT EXISTS user_info
+             (user_id INTEGER PRIMARY KEY, 
+              building_number TEXT, 
+              floor_number TEXT)''')
 
 # Commit the changes to the DB
 conn.commit()
@@ -58,7 +63,7 @@ scheduler.start()
 def get_user_building_floor(user_id: str):
     conn = sqlite3.connect('bookings.db')
     c = conn.cursor()
-    c.execute('SELECT building_number, floor_number FROM bookings WHERE user_id = ?', (user_id,))
+    c.execute('SELECT building_number, floor_number FROM user_info WHERE user_id = ?', (user_id,))
     result = c.fetchone()
     conn.close()
 
@@ -68,11 +73,10 @@ def get_user_building_floor(user_id: str):
     else:
         return None, None
     
-def update_booking_building_floor(user_id: str, building: str, floor: str):
-    # Update building and floor information for the given user_id in the bookings table
+def update_user_info(user_id: str, building: str, floor: str):
     conn = sqlite3.connect('bookings.db')
     c = conn.cursor()
-    c.execute('UPDATE bookings SET building_number=?, floor_number=? WHERE user_id=?', (building, floor, user_id))
+    c.execute('INSERT OR REPLACE INTO user_info (user_id, building_number, floor_number) VALUES (?, ?, ?)', (user_id, building, floor))
     conn.commit()
     conn.close()
 
@@ -158,11 +162,11 @@ def button(update: Update, context: CallbackContext) -> None:
         # Extract building and floor information
         building, floor = query.data.split('_')[1], query.data.split('_')[3]
         # Update building and floor in the database
-        update_booking_building_floor(user_id, building, floor)
+        update_user_info(user_id, building, floor)
         context.bot.send_message(chat_id=query.message.chat_id,
-                                 text=f"Корпус {building}, Этаж {floor} выбраны.")
+                                text=f"Корпус {building}, Этаж {floor} выбраны.")
         context.bot.send_message(chat_id=query.message.chat_id,
-                                 text="⚠️⚠️⚠️ ЕСЛИ У ВАС ОСТАВАЛИСЬ ЗАБРОНИРОВАНЫ СТИРКИ НА СТАРОМ МЕСТЕ, ПОЖАЛУЙСТА, СНАЧАЛА УДАЛИТЕ ИХ ВСЕ ⚠️⚠️⚠️")
+                                text="⚠️⚠️⚠️ ЕСЛИ У ВАС ОСТАВАЛИСЬ ЗАБРОНИРОВАНЫ СТИРКИ НА СТАРОМ МЕСТЕ, ПОЖАЛУЙСТА, СНАЧАЛА УДАЛИТЕ ИХ ВСЕ ⚠️⚠️⚠️")
         # Proceed to date selection
         dates = generate_dates()
         keyboard = [[InlineKeyboardButton(
@@ -234,7 +238,7 @@ def display_not_booked_times(update: Update, context: CallbackContext, selected_
 
     # Loop through the booked time slots
     for booking in bookings:
-        start_time, end_time, start_booking_date, end_booking_date = booking
+        id, user_id, building_number, floor_number, start_time, end_time, start_booking_date, end_booking_date = booking
         start_time_dt = datetime.strptime(
             f"{start_booking_date} {start_time}", "%d.%m.%Y %H:%M") - timedelta(minutes=30)
         end_time_dt = datetime.strptime(
