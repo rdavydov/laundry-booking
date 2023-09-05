@@ -211,7 +211,7 @@ def display_not_booked_times(update: Update, context: CallbackContext, selected_
     # Calculate the next date
     next_date = (selected_date_dt + timedelta(days=1)).strftime("%d.%m.%Y")
 
-    # Query the database for the bookings on the selected date and next date (up to 04:00)
+    # Query the database for the bookings on the selected date and next date (4 hours into next day)
     c.execute("""
     SELECT *
     FROM bookings
@@ -220,7 +220,7 @@ def display_not_booked_times(update: Update, context: CallbackContext, selected_
         OR (start_booking_date = ? AND floor_number = ? AND building_number = ? AND strftime('%H:%M', start_time) < '04:00')
         OR (end_booking_date = ? AND floor_number = ? AND building_number = ? AND strftime('%H:%M', end_time) >= '04:00')
     ORDER BY start_booking_date, start_time
-    """, (selected_date, _floor, building, next_date, _floor, building, selected_date, _floor, building))
+""", (selected_date, _floor, building, next_date, _floor, building, selected_date, _floor, building))
 
     bookings = c.fetchall()
 
@@ -262,7 +262,7 @@ def display_not_booked_times(update: Update, context: CallbackContext, selected_
 
     # Construct and send the message
     if free_time_slots:
-        message_text = "Свободное время в выбранный день:\n"
+        message_text = "Свободное время в выбранный день + 4 часа после:\n"
         for start, end in free_time_slots:
             start_date, start_time = start.split(" ")
             end_date, end_time = end.split(" ")
